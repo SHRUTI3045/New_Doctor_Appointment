@@ -15,4 +15,6 @@ public interface IAppointmentService {
     List<Appointment> getAppointmentsByDate(LocalDate date);
     List<Appointment> getAppointmentsByPatient(int patientId);
     Appointment updateStatus(int appointmentId, String status);
+    Appointment setPrescription(int appointmentId, String prescription);
+    Appointment reschedule(int appointmentId, java.time.LocalDate newDate);
 }

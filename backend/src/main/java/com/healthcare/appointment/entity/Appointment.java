@@ -29,4 +29,7 @@ public class Appointment {
     private String appointmentStatus;
 
     private String remark;
+
+    @Column(columnDefinition = "TEXT")
+    private String prescription;
 }

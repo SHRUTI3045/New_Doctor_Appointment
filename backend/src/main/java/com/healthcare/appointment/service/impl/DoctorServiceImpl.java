@@ -61,4 +61,10 @@ public class DoctorServiceImpl implements IDoctorService {
     public List<Doctor> getDoctorListBySpeciality(String speciality) {
         return doctorRepository.findBySpeciality(speciality);
     }
+
+    @Override
+    public Doctor getDoctorByUserId(int userId) {
+        return doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found for userId: " + userId));
+    }
 }

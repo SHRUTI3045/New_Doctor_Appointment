@@ -11,12 +11,9 @@ export default function SubmitFeedback() {
 
   useEffect(() => {
     api.get('/doctors/list').then(r => setDoctors(r.data))
-    api.get('/patients').then(r => {
-      const p = r.data.find(p =>
-        p.email?.toLowerCase() === user?.userName?.toLowerCase() ||
-        p.patientName?.toLowerCase().includes(user?.userName?.toLowerCase()))
-      if (p) setPatientId(p.patientId)
-    }).catch(() => {})
+    if (user?.userId) {
+      api.get(`/patients/by-user/${user.userId}`).then(r => setPatientId(r.data.patientId)).catch(() => {})
+    }
   }, [user])
 
   const handleSubmit = async (e) => {

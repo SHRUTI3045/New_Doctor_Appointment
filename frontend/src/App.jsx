@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
+import ErrorBoundary from './components/ErrorBoundary'
+import { ToastProvider } from './context/ToastContext'
 
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
@@ -10,6 +12,8 @@ import PatientDashboard from './pages/patient/PatientDashboard'
 import BookAppointment from './pages/patient/BookAppointment'
 import MyAppointments from './pages/patient/MyAppointments'
 import SubmitFeedback from './pages/patient/SubmitFeedback'
+import UpdateProfile from './pages/patient/UpdateProfile'
+import DoctorEarnings from './pages/doctor/DoctorEarnings'
 
 import DoctorDashboard from './pages/doctor/DoctorDashboard'
 import DoctorAppointments from './pages/doctor/DoctorAppointments'
@@ -22,6 +26,8 @@ import ManageAppointments from './pages/admin/ManageAppointments'
 
 export default function App() {
   return (
+    <ErrorBoundary>
+      <ToastProvider>
     <AuthProvider>
       <BrowserRouter>
         <Navbar />
@@ -42,6 +48,9 @@ export default function App() {
           <Route path="/patient/feedback" element={
             <ProtectedRoute roles={['PATIENT']}><SubmitFeedback /></ProtectedRoute>
           } />
+          <Route path="/patient/profile" element={
+            <ProtectedRoute roles={['PATIENT']}><UpdateProfile /></ProtectedRoute>
+          } />
 
           <Route path="/doctor" element={
             <ProtectedRoute roles={['DOCTOR']}><DoctorDashboard /></ProtectedRoute>
@@ -51,6 +60,9 @@ export default function App() {
           } />
           <Route path="/doctor/patients" element={
             <ProtectedRoute roles={['DOCTOR']}><DoctorPatients /></ProtectedRoute>
+          } />
+          <Route path="/doctor/earnings" element={
+            <ProtectedRoute roles={['DOCTOR']}><DoctorEarnings /></ProtectedRoute>
           } />
 
           <Route path="/admin" element={
@@ -75,5 +87,7 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   )
 }

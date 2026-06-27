@@ -66,4 +66,10 @@ public class PatientServiceImpl implements IPatientService {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public Patient getPatientByUserId(int userId) {
+        return patientRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Patient not found for userId: " + userId));
+    }
 }

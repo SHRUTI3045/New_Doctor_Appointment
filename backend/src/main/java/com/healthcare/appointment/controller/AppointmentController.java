@@ -70,6 +70,24 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.updateStatus(id, "CANCELLED"));
     }
 
+    @PutMapping("/{id}/complete")
+    public ResponseEntity<Appointment> complete(@PathVariable int id) {
+        return ResponseEntity.ok(appointmentService.updateStatus(id, "COMPLETED"));
+    }
+
+    @PutMapping("/{id}/prescription")
+    public ResponseEntity<Appointment> addPrescription(@PathVariable int id,
+            @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(appointmentService.setPrescription(id, body.get("prescription")));
+    }
+
+    @PutMapping("/{id}/reschedule")
+    public ResponseEntity<Appointment> reschedule(@PathVariable int id,
+            @RequestBody Map<String, String> body) {
+        java.time.LocalDate newDate = java.time.LocalDate.parse(body.get("appointmentDate"));
+        return ResponseEntity.ok(appointmentService.reschedule(id, newDate));
+    }
+
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<Appointment>> getByDoctor(@PathVariable int doctorId) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByDoctor(doctorId));

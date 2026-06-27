@@ -14,4 +14,5 @@ public interface IPatientService {
     List<Patient> getAllPatient();
     List<Patient> getPatientListByDoctor(int doctorId);
     List<Patient> getPatientListByDate(LocalDate appdate);
+    Patient getPatientByUserId(int userId);
 }

@@ -75,4 +75,19 @@ public class AppointmentServiceImpl implements IAppointmentService {
         appointment.setAppointmentStatus(status);
         return appointmentRepository.save(appointment);
     }
+
+    @Override
+    public Appointment setPrescription(int appointmentId, String prescription) {
+        Appointment app = getAppointment(appointmentId);
+        app.setPrescription(prescription);
+        return appointmentRepository.save(app);
+    }
+
+    @Override
+    public Appointment reschedule(int appointmentId, java.time.LocalDate newDate) {
+        Appointment app = getAppointment(appointmentId);
+        app.setAppointmentDate(newDate);
+        app.setAppointmentStatus("PENDING");
+        return appointmentRepository.save(app);
+    }
 }

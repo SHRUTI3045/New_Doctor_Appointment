@@ -6,6 +6,7 @@ export default function DoctorDashboard() {
   const cards = [
     { title: 'My Appointments', desc: 'View and manage all your appointments', to: '/doctor/appointments', color: '#0b7065' },
     { title: 'My Patients', desc: 'View list of assigned patients', to: '/doctor/patients', color: '#1e3a5f' },
+    { title: 'My Earnings', desc: 'View earnings from completed appointments', to: '/doctor/earnings', color: '#d97706' },
   ]
   return (
     <div style={s.page}>

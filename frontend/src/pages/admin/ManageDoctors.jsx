@@ -3,15 +3,41 @@ import api from '../../api/axios'
 
 const EMPTY = { doctorName: '', speciality: '', location: '', hospitalName: '', mobileNo: '', email: '', password: '', chargedPerVisit: '' }
 
+function Pagination({ total, page, perPage, onChange }) {
+  const pages = Math.ceil(total / perPage)
+  if (pages <= 1) return null
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '16px 0', borderTop: '1px solid #ebf0f5' }}>
+      <button disabled={page === 1} onClick={() => onChange(page - 1)}
+        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === 1 ? '#f8fafc' : '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
+        ← Prev
+      </button>
+      <span style={{ fontSize: '13px', color: '#637082', minWidth: '90px', textAlign: 'center' }}>
+        Page {page} of {pages} ({total} total)
+      </span>
+      <button disabled={page === pages} onClick={() => onChange(page + 1)}
+        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === pages ? '#f8fafc' : '#fff', cursor: page === pages ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
+        Next →
+      </button>
+    </div>
+  )
+}
+
 export default function ManageDoctors() {
   const [doctors, setDoctors] = useState([])
   const [form, setForm] = useState(EMPTY)
   const [editing, setEditing] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [msg, setMsg] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const PER_PAGE = 10
 
   const load = () => api.get('/doctors/list').then(r => setDoctors(r.data))
   useEffect(() => { load() }, [])
+
+  // Reset page when search changes
+  useEffect(() => { setPage(1) }, [search])
 
   const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }))
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
@@ -48,11 +74,22 @@ export default function ManageDoctors() {
     ['hospitalName','Hospital'],['mobileNo','Mobile'],['email','Email'],['chargedPerVisit','Charge/Visit (₹)']
   ]
 
+  const searched = doctors.filter(d => !search || d.doctorName?.toLowerCase().includes(search.toLowerCase()) || d.speciality?.toLowerCase().includes(search.toLowerCase()) || d.location?.toLowerCase().includes(search.toLowerCase()))
+  const paginated = searched.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+
   return (
     <div style={s.page}>
       <div style={s.topBar}>
         <h2 style={s.title}>Manage Doctors</h2>
-        <button style={s.addBtn} onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(true) }}>+ Add Doctor</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input
+            style={s.searchInput}
+            placeholder="Search name, speciality, location..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <button style={s.addBtn} onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(true) }}>+ Add Doctor</button>
+        </div>
       </div>
       {msg && <div style={s.info}>{msg}</div>}
 
@@ -78,7 +115,7 @@ export default function ManageDoctors() {
             {['Name','Speciality','Hospital','Location','Mobile','Charge','Actions'].map(h => <th key={h} style={s.th}>{h}</th>)}
           </tr></thead>
           <tbody>
-            {doctors.map(d => (
+            {paginated.map(d => (
               <tr key={d.doctorId} style={s.tr}>
                 <td style={s.td}>{d.doctorName}</td>
                 <td style={s.td}>{d.speciality}</td>
@@ -94,6 +131,8 @@ export default function ManageDoctors() {
             ))}
           </tbody>
         </table>
+        {searched.length === 0 && <p style={s.empty}>No doctors found.</p>}
+        <Pagination total={searched.length} page={page} perPage={PER_PAGE} onChange={setPage} />
       </div>
     </div>
   )
@@ -104,6 +143,7 @@ const s = {
   topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   title: { margin: 0, fontSize: '22px', fontWeight: 600 },
   addBtn: { background: '#0b7065', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' },
+  searchInput: { padding: '6px 10px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '13px', width: '200px' },
   info: { background: '#d1fae5', color: '#065f46', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '13.5px' },
   formCard: { background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', padding: '24px', marginBottom: '24px' },
   formTitle: { margin: '0 0 16px', fontSize: '16px', fontWeight: 600 },
@@ -120,4 +160,5 @@ const s = {
   td: { padding: '11px 14px', fontSize: '13.5px' },
   editBtn: { background: '#dbeafe', color: '#1e3a5f', border: 'none', padding: '3px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginRight: '6px' },
   delBtn: { background: '#fee2e2', color: '#991b1b', border: 'none', padding: '3px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
+  empty: { textAlign: 'center', padding: '24px', color: '#637082', fontSize: '14px' },
 }

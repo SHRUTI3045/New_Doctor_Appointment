@@ -53,6 +53,7 @@ public class AuthController {
 
         if ("PATIENT".equals(user.getRole())) {
             Patient patient = new Patient();
+            patient.setUserId(user.getUserId());
             patient.setPatientName(request.getPatientName());
             patient.setEmail(request.getEmail());
             patient.setMobileNo(request.getMobileNo());

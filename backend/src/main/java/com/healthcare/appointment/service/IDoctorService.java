@@ -14,4 +14,5 @@ public interface IDoctorService {
     void removeDoctor(int doctorId);
     List<Doctor> getDoctorList();
     List<Doctor> getDoctorListBySpeciality(String speciality);
+    Doctor getDoctorByUserId(int userId);
 }

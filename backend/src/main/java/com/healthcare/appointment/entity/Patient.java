@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "patients")
@@ -16,6 +18,9 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int patientId;
 
+    @Column(name = "user_id")
+    private Integer userId;
+
     @NotBlank
     private String patientName;
 
@@ -25,6 +30,8 @@ public class Patient {
     @Column(unique = true)
     private String email;
 
+    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private String bloodGroup;

@@ -8,17 +8,11 @@ export default function DoctorPatients() {
   const { user } = useAuth()
 
   useEffect(() => {
-    api.get('/doctors/list').then(r => {
-      const d = r.data.find(d =>
-        d.doctorName?.toLowerCase().includes(user?.userName?.toLowerCase()) ||
-        d.email?.toLowerCase() === user?.userName?.toLowerCase())
-      if (d) {
-        api.get(`/patients/by-doctor/${d.doctorId}`).then(p => {
-          setPatients(p.data)
-          setLoading(false)
-        })
-      } else setLoading(false)
-    }).catch(() => setLoading(false))
+    if (!user?.userId) { setLoading(false); return }
+    api.get(`/doctors/by-user/${user.userId}`)
+      .then(r => api.get(`/patients/by-doctor/${r.data.doctorId}`))
+      .then(p => { setPatients(p.data); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [user])
 
   return (

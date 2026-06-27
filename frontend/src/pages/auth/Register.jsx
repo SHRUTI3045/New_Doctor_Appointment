@@ -27,14 +27,6 @@ export default function Register() {
     }
   }
 
-  const Field = ({ label, field, type = 'text', placeholder }) => (
-    <div>
-      <label style={s.label}>{label}</label>
-      <input style={s.input} type={type} value={form[field]}
-        onChange={set(field)} placeholder={placeholder} required />
-    </div>
-  )
-
   return (
     <div style={s.page}>
       <div style={s.card}>
@@ -43,16 +35,16 @@ export default function Register() {
         {error && <div style={s.error}>{error}</div>}
         <form onSubmit={handleSubmit} style={s.form}>
           <div style={s.grid2}>
-            <Field label="Username" field="userName" placeholder="Choose a username" />
-            <Field label="Password" field="password" type="password" placeholder="••••••••" />
+            <Field label="Username" value={form.userName} onChange={set('userName')} placeholder="Choose a username" />
+            <Field label="Password" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
           </div>
           <div style={s.grid2}>
-            <Field label="Full Name" field="patientName" placeholder="Your full name" />
-            <Field label="Email" field="email" type="email" placeholder="you@email.com" />
+            <Field label="Full Name" value={form.patientName} onChange={set('patientName')} placeholder="Your full name" />
+            <Field label="Email" type="email" value={form.email} onChange={set('email')} placeholder="you@email.com" />
           </div>
           <div style={s.grid2}>
-            <Field label="Mobile No." field="mobileNo" placeholder="+91 XXXXX XXXXX" />
-            <Field label="Age" field="age" type="number" placeholder="Age" />
+            <Field label="Mobile No." value={form.mobileNo} onChange={set('mobileNo')} placeholder="+91 XXXXX XXXXX" />
+            <Field label="Age" type="number" value={form.age} onChange={set('age')} placeholder="Age" />
           </div>
           <div style={s.grid3}>
             <div>
@@ -71,7 +63,7 @@ export default function Register() {
                 {['A+','A-','B+','B-','O+','O-','AB+','AB-'].map(g => <option key={g}>{g}</option>)}
               </select>
             </div>
-            <Field label="Address" field="address" placeholder="City, State" />
+            <Field label="Address" value={form.address} onChange={set('address')} placeholder="City, State" />
           </div>
           <button style={s.btn} type="submit" disabled={loading}>
             {loading ? 'Registering…' : 'Create Account'}
@@ -79,6 +71,16 @@ export default function Register() {
         </form>
         <p style={s.foot}>Already registered? <Link to="/login" style={s.link}>Sign in</Link></p>
       </div>
+    </div>
+  )
+}
+
+function Field({ label, value, onChange, type = 'text', placeholder }) {
+  return (
+    <div>
+      <label style={s.label}>{label}</label>
+      <input style={s.input} type={type} value={value}
+        onChange={onChange} placeholder={placeholder} required />
     </div>
   )
 }

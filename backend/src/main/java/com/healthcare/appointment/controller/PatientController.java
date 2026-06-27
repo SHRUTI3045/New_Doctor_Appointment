@@ -1,10 +1,13 @@
 package com.healthcare.appointment.controller;
 
 import com.healthcare.appointment.entity.Patient;
+import com.healthcare.appointment.entity.User;
+import com.healthcare.appointment.repository.UserRepository;
 import com.healthcare.appointment.service.IPatientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,6 +19,8 @@ import java.util.List;
 public class PatientController {
 
     private final IPatientService patientService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
     public ResponseEntity<List<Patient>> getAllPatients() {
@@ -27,8 +32,28 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getPatient(id));
     }
 
+    @GetMapping("/by-user/{userId}")
+    public ResponseEntity<Patient> getByUserId(@PathVariable int userId) {
+        return ResponseEntity.ok(patientService.getPatientByUserId(userId));
+    }
+
     @PostMapping
-    public ResponseEntity<Patient> addPatient(@RequestBody Patient patient) {
+    public ResponseEntity<?> addPatient(@RequestBody Patient patient) {
+        String rawPassword = patient.getPassword();
+        String encoded = (rawPassword != null && !rawPassword.isEmpty())
+                ? passwordEncoder.encode(rawPassword) : null;
+
+        // create a login account using email as username if not already exists
+        if (patient.getEmail() != null && !userRepository.existsByUserName(patient.getEmail())) {
+            User user = new User();
+            user.setUserName(patient.getEmail());
+            user.setPassword(encoded != null ? encoded : passwordEncoder.encode("changeme"));
+            user.setRole("PATIENT");
+            User saved = userRepository.save(user);
+            patient.setUserId(saved.getUserId());
+        }
+
+        if (encoded != null) patient.setPassword(encoded);
         return ResponseEntity.ok(patientService.addPatient(patient));
     }
 
