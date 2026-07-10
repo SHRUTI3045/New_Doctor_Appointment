@@ -1,33 +1,15 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { CalendarClock, Search, Check, X as XIcon, CheckCircle2 } from 'lucide-react'
 import api from '../../api/axios'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
+import { StatusBadge } from '../../components/ui/Badge'
+import { Pagination } from '../../components/ui/Pagination'
+import { EmptyState } from '../../components/ui/EmptyState'
 
-const STATUS_STYLE = {
-  PENDING:   { background: '#fef3c7', color: '#92400e' },
-  APPROVED:  { background: '#d1fae5', color: '#065f46' },
-  REJECTED:  { background: '#fee2e2', color: '#991b1b' },
-  CANCELLED: { background: '#f3f4f6', color: '#6b7280' },
-  COMPLETED: { background: '#dcfce7', color: '#166534' },
-}
-
-function Pagination({ total, page, perPage, onChange }) {
-  const pages = Math.ceil(total / perPage)
-  if (pages <= 1) return null
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '16px 0', borderTop: '1px solid #ebf0f5' }}>
-      <button disabled={page === 1} onClick={() => onChange(page - 1)}
-        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === 1 ? '#f8fafc' : '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
-        ← Prev
-      </button>
-      <span style={{ fontSize: '13px', color: '#637082', minWidth: '90px', textAlign: 'center' }}>
-        Page {page} of {pages} ({total} total)
-      </span>
-      <button disabled={page === pages} onClick={() => onChange(page + 1)}
-        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === pages ? '#f8fafc' : '#fff', cursor: page === pages ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
-        Next →
-      </button>
-    </div>
-  )
-}
+const FILTERS = ['ALL', 'PENDING', 'APPROVED', 'COMPLETED', 'REJECTED', 'CANCELLED']
 
 export default function ManageAppointments() {
   const [appointments, setAppointments] = useState([])
@@ -40,8 +22,6 @@ export default function ManageAppointments() {
 
   const load = () => api.get('/appointments').then(r => setAppointments(r.data))
   useEffect(() => { load() }, [])
-
-  // Reset page when search or filter changes
   useEffect(() => { setPage(1) }, [search, filter])
 
   const flash = m => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
@@ -62,7 +42,6 @@ export default function ManageAppointments() {
   })
 
   const filtered = filter === 'ALL' ? appointments : appointments.filter(a => a.appointmentStatus === filter)
-
   const searched = filtered.filter(a => !search || a.patient?.patientName?.toLowerCase().includes(search.toLowerCase()) || a.doctor?.doctorName?.toLowerCase().includes(search.toLowerCase()))
   const paginated = searched.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
@@ -80,100 +59,99 @@ export default function ManageAppointments() {
   }
 
   return (
-    <div style={s.page}>
-      <div style={s.topBar}>
-        <h2 style={s.title}>Manage Appointments</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <input
-            style={s.searchInput}
-            placeholder="Search patient or doctor..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <div style={s.filters}>
-            {['ALL','PENDING','APPROVED','COMPLETED','REJECTED','CANCELLED'].map(f => (
-              <button key={f} style={{ ...s.filterBtn, ...(filter === f ? s.filterActive : {}) }}
-                onClick={() => setFilter(f)}>{f}</button>
+    <div className="max-w-6xl mx-auto px-5 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-extrabold text-text">Manage Appointments</h1>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Input icon={Search} placeholder="Search patient or doctor…" value={search} onChange={e => setSearch(e.target.value)} className="w-56" />
+          <div className="flex gap-1.5 flex-wrap">
+            {FILTERS.map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all duration-200 ${
+                  filter === f ? 'bg-primary text-white border-primary shadow-soft' : 'bg-white text-muted border-border hover:border-primary hover:text-primary'
+                }`}
+              >
+                {f}
+              </button>
             ))}
           </div>
         </div>
       </div>
-      {msg && <div style={s.info}>{msg}</div>}
-      {selected.size > 0 && (
-        <div style={s.bulkBar}>
-          <span style={s.bulkCount}>{selected.size} selected ({pendingSelected.length} pending)</span>
-          <button style={s.bulkApprove} onClick={approveAll} disabled={pendingSelected.length === 0}>Approve Selected</button>
-          <button style={s.bulkReject} onClick={rejectAll} disabled={pendingSelected.length === 0}>Reject Selected</button>
-          <button style={s.bulkClear} onClick={() => setSelected(new Set())}>Clear</button>
-        </div>
-      )}
-      <div style={s.tableWrap}>
-        <table style={s.table}>
-          <thead><tr style={s.thead}>
-            <th style={s.th}></th>
-            {['ID','Patient','Doctor','Date','Status','Remark','Actions'].map(h => <th key={h} style={s.th}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {paginated.map(a => (
-              <tr key={a.appointmentId} style={s.tr}>
-                <td style={s.td}>
-                  {a.appointmentStatus === 'PENDING' && (
-                    <input type="checkbox" checked={selected.has(a.appointmentId)}
-                      onChange={() => toggleSelect(a.appointmentId)} />
-                  )}
-                </td>
-                <td style={s.td}>#{a.appointmentId}</td>
-                <td style={s.td}>{a.patient?.patientName}</td>
-                <td style={s.td}>Dr. {a.doctor?.doctorName}<br/><span style={s.spec}>{a.doctor?.speciality}</span></td>
-                <td style={s.td}>{a.appointmentDate}</td>
-                <td style={s.td}>
-                  <span style={{ ...s.badge, ...STATUS_STYLE[a.appointmentStatus] }}>
-                    {a.appointmentStatus}
-                  </span>
-                </td>
-                <td style={s.td}>{a.remark || '—'}</td>
-                <td style={s.td}>
-                  {a.appointmentStatus === 'PENDING' && (
-                    <>
-                      <button style={s.approveBtn} onClick={() => approve(a.appointmentId)}>Approve</button>
-                      <button style={s.rejectBtn} onClick={() => reject(a.appointmentId)}>Reject</button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {searched.length === 0 && <p style={s.empty}>No appointments found.</p>}
+
+      <AnimatePresence>
+        {msg && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-2 text-sm px-4 py-3 rounded-xl mb-5 border bg-emerald-50 text-emerald-700 border-emerald-100">
+            <CheckCircle2 className="w-4 h-4" /> {msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selected.size > 0 && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-3 px-4 py-2.5 bg-emerald-50 rounded-xl mb-4 flex-wrap">
+            <span className="text-[13px] font-semibold text-emerald-700">{selected.size} selected ({pendingSelected.length} pending)</span>
+            <Button size="sm" variant="success" disabled={pendingSelected.length === 0} onClick={approveAll}><Check className="w-3.5 h-3.5" /> Approve Selected</Button>
+            <Button size="sm" variant="danger" disabled={pendingSelected.length === 0} onClick={rejectAll}><XIcon className="w-3.5 h-3.5" /> Reject Selected</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Clear</Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Card className="overflow-hidden">
+        {paginated.length === 0 ? (
+          <EmptyState icon={CalendarClock} title="No appointments found" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-border">
+                  <th className="px-4 py-3 w-8"></th>
+                  {['ID', 'Patient', 'Doctor', 'Date', 'Status', 'Remark', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(a => (
+                  <tr key={a.appointmentId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3">
+                      {a.appointmentStatus === 'PENDING' && (
+                        <input type="checkbox" checked={selected.has(a.appointmentId)} onChange={() => toggleSelect(a.appointmentId)}
+                          className="w-4 h-4 rounded border-border accent-primary" />
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-muted">#{a.appointmentId}</td>
+                    <td className="px-4 py-3 text-[13.5px] font-medium text-text">{a.patient?.patientName}</td>
+                    <td className="px-4 py-3 text-[13px]">
+                      <div className="text-text font-medium">Dr. {a.doctor?.doctorName}</div>
+                      <div className="text-muted text-[12px]">{a.doctor?.speciality}</div>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-muted whitespace-nowrap">{a.appointmentDate}</td>
+                    <td className="px-4 py-3"><StatusBadge status={a.appointmentStatus} /></td>
+                    <td className="px-4 py-3 text-[13px] text-muted">{a.remark || '—'}</td>
+                    <td className="px-4 py-3">
+                      {a.appointmentStatus === 'PENDING' && (
+                        <div className="flex gap-1.5">
+                          <Button size="sm" variant="success" onClick={() => approve(a.appointmentId)}><Check className="w-3.5 h-3.5" /></Button>
+                          <Button size="sm" variant="danger" onClick={() => reject(a.appointmentId)}><XIcon className="w-3.5 h-3.5" /></Button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <Pagination total={searched.length} page={page} perPage={PER_PAGE} onChange={setPage} />
-      </div>
+      </Card>
     </div>
   )
-}
-
-const s = {
-  page: { maxWidth: '1100px', margin: '0 auto', padding: '40px 24px' },
-  topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' },
-  title: { margin: 0, fontSize: '22px', fontWeight: 600 },
-  filters: { display: 'flex', gap: '6px', flexWrap: 'wrap' },
-  filterBtn: { padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: '#fff', fontSize: '12px', fontWeight: 500, cursor: 'pointer', color: '#637082' },
-  filterActive: { background: '#0b7065', color: 'white', borderColor: '#0b7065' },
-  searchInput: { padding: '6px 10px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '13px', width: '200px' },
-  info: { background: '#d1fae5', color: '#065f46', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '13.5px' },
-  bulkBar: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '4px', marginBottom: '12px', flexWrap: 'wrap' },
-  bulkCount: { fontSize: '13px', fontWeight: 600, color: '#065f46', marginRight: '4px' },
-  bulkApprove: { background: '#d1fae5', color: '#065f46', border: 'none', padding: '5px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  bulkReject: { background: '#fee2e2', color: '#991b1b', border: 'none', padding: '5px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  bulkClear: { background: '#f3f4f6', color: '#374151', border: 'none', padding: '5px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' },
-  tableWrap: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', overflow: 'hidden' },
-  thead: { background: '#f8fafc' },
-  th: { textAlign: 'left', padding: '10px 14px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#637082', borderBottom: '2px solid #d8e2ec' },
-  tr: { borderBottom: '1px solid #ebf0f5' },
-  td: { padding: '11px 14px', fontSize: '13.5px', verticalAlign: 'top' },
-  spec: { fontSize: '12px', color: '#637082' },
-  badge: { fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px' },
-  approveBtn: { background: '#d1fae5', color: '#065f46', border: 'none', padding: '4px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginRight: '6px' },
-  rejectBtn: { background: '#fee2e2', color: '#991b1b', border: 'none', padding: '4px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  empty: { textAlign: 'center', padding: '24px', color: '#637082', fontSize: '14px' },
 }

@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { Users, Phone, Mail, Droplet } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
+import { Card } from '../../components/ui/Card'
+import { Avatar } from '../../components/ui/Avatar'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { CardSkeleton } from '../../components/ui/Skeleton'
 
 export default function DoctorPatients() {
   const [patients, setPatients] = useState([])
@@ -16,32 +22,36 @@ export default function DoctorPatients() {
   }, [user])
 
   return (
-    <div style={s.page}>
-      <h2 style={s.title}>My Patients</h2>
-      {loading ? <p>Loading…</p> : patients.length === 0 ? (
-        <p style={{ color: '#637082' }}>No patients assigned yet.</p>
+    <div className="max-w-4xl mx-auto px-5 py-8">
+      <div className="flex items-center gap-2 mb-6">
+        <Users className="w-6 h-6 text-primary" />
+        <h1 className="text-2xl font-extrabold text-text">My Patients</h1>
+      </div>
+
+      {loading ? (
+        <div className="grid sm:grid-cols-2 gap-4">{Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}</div>
+      ) : patients.length === 0 ? (
+        <EmptyState icon={Users} title="No patients assigned yet" description="Patients who book with you will show up here." />
       ) : (
-        <div style={s.grid}>
-          {patients.map(p => (
-            <div key={p.patientId} style={s.card}>
-              <div style={s.name}>{p.patientName}</div>
-              <div style={s.meta}>{p.gender}, {p.age} yrs · {p.bloodGroup}</div>
-              <div style={s.contact}>{p.mobileNo}</div>
-              <div style={s.contact}>{p.email}</div>
-            </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {patients.map((p, i) => (
+            <motion.div key={p.patientId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+              <Card gradient hover className="p-5 flex items-center gap-4">
+                <Avatar name={p.patientName} size="md" />
+                <div className="min-w-0">
+                  <div className="font-bold text-[14.5px] text-text truncate">{p.patientName}</div>
+                  <div className="text-xs text-muted mb-1.5">{p.gender}, {p.age} yrs</div>
+                  <div className="flex flex-col gap-0.5 text-[12.5px] text-muted">
+                    {p.mobileNo && <span className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {p.mobileNo}</span>}
+                    {p.email && <span className="flex items-center gap-1.5 truncate"><Mail className="w-3 h-3" /> {p.email}</span>}
+                    {p.bloodGroup && <span className="flex items-center gap-1.5"><Droplet className="w-3 h-3" /> {p.bloodGroup}</span>}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}
     </div>
   )
-}
-
-const s = {
-  page: { maxWidth: '900px', margin: '0 auto', padding: '40px 24px' },
-  title: { margin: '0 0 24px', fontSize: '22px', fontWeight: 600 },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' },
-  card: { background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', padding: '18px' },
-  name: { fontWeight: 600, fontSize: '14px', marginBottom: '4px' },
-  meta: { color: '#637082', fontSize: '13px' },
-  contact: { color: '#374151', fontSize: '13px', marginTop: '2px' },
 }

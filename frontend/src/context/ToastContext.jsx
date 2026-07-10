@@ -1,26 +1,37 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { CheckCircle2, XCircle, Info } from 'lucide-react'
 
 const ToastContext = createContext(null)
 
 const STYLES = {
-  success: { background: '#d1fae5', color: '#065f46', borderLeft: '4px solid #10b981' },
-  error:   { background: '#fee2e2', color: '#991b1b', borderLeft: '4px solid #ef4444' },
-  info:    { background: '#dbeafe', color: '#1e3a5f', borderLeft: '4px solid #3b82f6' },
+  success: { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
+  error:   { className: 'bg-red-50 text-danger border-red-200', icon: XCircle },
+  info:    { className: 'bg-sky-50 text-sky-700 border-sky-200', icon: Info },
 }
 
 function ToastList({ toasts }) {
-  if (!toasts.length) return null
   return (
-    <div style={{ position: 'fixed', top: '72px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none' }}>
-      {toasts.map(t => (
-        <div key={t.id} style={{
-          padding: '12px 18px', borderRadius: '6px', fontSize: '14px', fontWeight: 500,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.12)', maxWidth: '340px', minWidth: '220px',
-          ...STYLES[t.type]
-        }}>
-          {t.message}
-        </div>
-      ))}
+    <div className="fixed top-20 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+      <AnimatePresence>
+        {toasts.map(t => {
+          const style = STYLES[t.type] || STYLES.info
+          const Icon = style.icon
+          return (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, x: 30, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 30, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-card-hover border max-w-[340px] min-w-[220px] ${style.className}`}
+            >
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              {t.message}
+            </motion.div>
+          )
+        })}
+      </AnimatePresence>
     </div>
   )
 }

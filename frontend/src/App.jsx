@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { ShieldAlert } from 'lucide-react'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Navbar from './components/Navbar'
@@ -79,9 +80,12 @@ export default function App() {
           } />
 
           <Route path="/unauthorized" element={
-            <div style={{textAlign:'center',padding:'60px'}}>
-              <h2>Access Denied</h2>
-              <p>You do not have permission to view this page.</p>
+            <div className="flex flex-col items-center text-center px-6 py-24">
+              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                <ShieldAlert className="w-7 h-7 text-danger" />
+              </div>
+              <h2 className="text-xl font-extrabold text-text mb-1">Access Denied</h2>
+              <p className="text-muted text-sm">You do not have permission to view this page.</p>
             </div>
           } />
         </Routes>

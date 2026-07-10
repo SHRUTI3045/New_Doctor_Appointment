@@ -1,27 +1,15 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Stethoscope, Search, Plus, Pencil, Trash2, CheckCircle2, X } from 'lucide-react'
 import api from '../../api/axios'
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Input, Label } from '../../components/ui/Input'
+import { Avatar } from '../../components/ui/Avatar'
+import { Pagination } from '../../components/ui/Pagination'
+import { EmptyState } from '../../components/ui/EmptyState'
 
 const EMPTY = { doctorName: '', speciality: '', location: '', hospitalName: '', mobileNo: '', email: '', password: '', chargedPerVisit: '' }
-
-function Pagination({ total, page, perPage, onChange }) {
-  const pages = Math.ceil(total / perPage)
-  if (pages <= 1) return null
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '16px 0', borderTop: '1px solid #ebf0f5' }}>
-      <button disabled={page === 1} onClick={() => onChange(page - 1)}
-        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === 1 ? '#f8fafc' : '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
-        ← Prev
-      </button>
-      <span style={{ fontSize: '13px', color: '#637082', minWidth: '90px', textAlign: 'center' }}>
-        Page {page} of {pages} ({total} total)
-      </span>
-      <button disabled={page === pages} onClick={() => onChange(page + 1)}
-        style={{ padding: '5px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', background: page === pages ? '#f8fafc' : '#fff', cursor: page === pages ? 'not-allowed' : 'pointer', color: '#374151', fontSize: '13px' }}>
-        Next →
-      </button>
-    </div>
-  )
-}
 
 export default function ManageDoctors() {
   const [doctors, setDoctors] = useState([])
@@ -35,8 +23,6 @@ export default function ManageDoctors() {
 
   const load = () => api.get('/doctors/list').then(r => setDoctors(r.data))
   useEffect(() => { load() }, [])
-
-  // Reset page when search changes
   useEffect(() => { setPage(1) }, [search])
 
   const set = f => e => setForm(p => ({ ...p, [f]: e.target.value }))
@@ -70,95 +56,96 @@ export default function ManageDoctors() {
   }
 
   const fields = [
-    ['doctorName','Doctor Name'],['speciality','Speciality'],['location','Location'],
-    ['hospitalName','Hospital'],['mobileNo','Mobile'],['email','Email'],['chargedPerVisit','Charge/Visit (₹)']
+    ['doctorName', 'Doctor Name'], ['speciality', 'Speciality'], ['location', 'Location'],
+    ['hospitalName', 'Hospital'], ['mobileNo', 'Mobile'], ['email', 'Email'], ['chargedPerVisit', 'Charge/Visit (₹)']
   ]
 
   const searched = doctors.filter(d => !search || d.doctorName?.toLowerCase().includes(search.toLowerCase()) || d.speciality?.toLowerCase().includes(search.toLowerCase()) || d.location?.toLowerCase().includes(search.toLowerCase()))
   const paginated = searched.slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   return (
-    <div style={s.page}>
-      <div style={s.topBar}>
-        <h2 style={s.title}>Manage Doctors</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <input
-            style={s.searchInput}
-            placeholder="Search name, speciality, location..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <button style={s.addBtn} onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(true) }}>+ Add Doctor</button>
+    <div className="max-w-5xl mx-auto px-5 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Stethoscope className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl font-extrabold text-text">Manage Doctors</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input icon={Search} placeholder="Search name, speciality, location…" value={search} onChange={e => setSearch(e.target.value)} className="w-56" />
+          <Button onClick={() => { setForm(EMPTY); setEditing(null); setShowForm(true) }}><Plus className="w-4 h-4" /> Add Doctor</Button>
         </div>
       </div>
-      {msg && <div style={s.info}>{msg}</div>}
 
-      {showForm && (
-        <div style={s.formCard}>
-          <h3 style={s.formTitle}>{editing ? 'Edit Doctor' : 'Add Doctor'}</h3>
-          <form onSubmit={handleSubmit} style={s.formGrid}>
-            {fields.map(([f, l]) => (
-              <div key={f}><label style={s.label}>{l}</label><input style={s.input} value={form[f]} onChange={set(f)} required={!editing} /></div>
-            ))}
-            {!editing && <div><label style={s.label}>Password</label><input style={s.input} type="password" value={form.password} onChange={set('password')} required /></div>}
-            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px', marginTop: '4px' }}>
-              <button style={s.saveBtn} type="submit">{editing ? 'Update' : 'Add'}</button>
-              <button style={s.cancelBtn} type="button" onClick={() => setShowForm(false)}>Cancel</button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AnimatePresence>
+        {msg && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-2 text-sm px-4 py-3 rounded-xl mb-5 border bg-emerald-50 text-emerald-700 border-emerald-100">
+            <CheckCircle2 className="w-4 h-4" /> {msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div style={s.tableWrap}>
-        <table style={s.table}>
-          <thead><tr style={s.thead}>
-            {['Name','Speciality','Hospital','Location','Mobile','Charge','Actions'].map(h => <th key={h} style={s.th}>{h}</th>)}
-          </tr></thead>
-          <tbody>
-            {paginated.map(d => (
-              <tr key={d.doctorId} style={s.tr}>
-                <td style={s.td}>{d.doctorName}</td>
-                <td style={s.td}>{d.speciality}</td>
-                <td style={s.td}>{d.hospitalName}</td>
-                <td style={s.td}>{d.location}</td>
-                <td style={s.td}>{d.mobileNo}</td>
-                <td style={s.td}>₹{d.chargedPerVisit}</td>
-                <td style={s.td}>
-                  <button style={s.editBtn} onClick={() => startEdit(d)}>Edit</button>
-                  <button style={s.delBtn} onClick={() => remove(d.doctorId)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {searched.length === 0 && <p style={s.empty}>No doctors found.</p>}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-6">
+            <Card gradient className="p-6">
+              <h3 className="font-bold text-[15px] text-text mb-4">{editing ? 'Edit Doctor' : 'Add Doctor'}</h3>
+              <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-4">
+                {fields.map(([f, l]) => (
+                  <div key={f}><Label>{l}</Label><Input value={form[f]} onChange={set(f)} required={!editing} /></div>
+                ))}
+                {!editing && <div><Label>Password</Label><Input type="password" value={form.password} onChange={set('password')} required /></div>}
+                <div className="sm:col-span-2 flex gap-2 mt-1">
+                  <Button type="submit">{editing ? 'Update' : 'Add'}</Button>
+                  <Button type="button" variant="secondary" onClick={() => setShowForm(false)}><X className="w-4 h-4" /> Cancel</Button>
+                </div>
+              </form>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Card className="overflow-hidden">
+        {paginated.length === 0 ? (
+          <EmptyState icon={Stethoscope} title="No doctors found" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 border-b border-border">
+                  {['Doctor', 'Speciality', 'Hospital', 'Location', 'Mobile', 'Charge', 'Actions'].map(h => (
+                    <th key={h} className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.map(d => (
+                  <tr key={d.doctorId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <Avatar name={d.doctorName} size="sm" />
+                        <span className="text-[13.5px] font-medium text-text">Dr. {d.doctorName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-muted">{d.speciality}</td>
+                    <td className="px-4 py-3 text-[13px] text-muted">{d.hospitalName}</td>
+                    <td className="px-4 py-3 text-[13px] text-muted">{d.location}</td>
+                    <td className="px-4 py-3 text-[13px] text-muted">{d.mobileNo}</td>
+                    <td className="px-4 py-3 text-[13px] font-semibold text-primary">₹{d.chargedPerVisit}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <Button size="sm" variant="secondary" onClick={() => startEdit(d)}><Pencil className="w-3.5 h-3.5" /></Button>
+                        <Button size="sm" variant="danger" onClick={() => remove(d.doctorId)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <Pagination total={searched.length} page={page} perPage={PER_PAGE} onChange={setPage} />
-      </div>
+      </Card>
     </div>
   )
-}
-
-const s = {
-  page: { maxWidth: '1000px', margin: '0 auto', padding: '40px 24px' },
-  topBar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  title: { margin: 0, fontSize: '22px', fontWeight: 600 },
-  addBtn: { background: '#0b7065', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 600, fontSize: '13.5px', cursor: 'pointer' },
-  searchInput: { padding: '6px 10px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '13px', width: '200px' },
-  info: { background: '#d1fae5', color: '#065f46', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '13.5px' },
-  formCard: { background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', padding: '24px', marginBottom: '24px' },
-  formTitle: { margin: '0 0 16px', fontSize: '16px', fontWeight: 600 },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
-  label: { display: 'block', fontSize: '12px', fontWeight: 500, color: '#374151', marginBottom: '4px' },
-  input: { width: '100%', padding: '8px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '13.5px' },
-  saveBtn: { padding: '8px 20px', background: '#0b7065', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer' },
-  cancelBtn: { padding: '8px 20px', background: '#f3f4f6', color: '#374151', border: '1px solid #d8e2ec', borderRadius: '4px', cursor: 'pointer' },
-  tableWrap: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', overflow: 'hidden' },
-  thead: { background: '#f8fafc' },
-  th: { textAlign: 'left', padding: '10px 14px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#637082', borderBottom: '2px solid #d8e2ec' },
-  tr: { borderBottom: '1px solid #ebf0f5' },
-  td: { padding: '11px 14px', fontSize: '13.5px' },
-  editBtn: { background: '#dbeafe', color: '#1e3a5f', border: 'none', padding: '3px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginRight: '6px' },
-  delBtn: { background: '#fee2e2', color: '#991b1b', border: 'none', padding: '3px 10px', borderRadius: '3px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  empty: { textAlign: 'center', padding: '24px', color: '#637082', fontSize: '14px' },
 }

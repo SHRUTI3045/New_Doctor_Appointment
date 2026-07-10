@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { CalendarPlus, CalendarClock, MessageSquareHeart, UserCircle, Clock, Hourglass, CheckCircle2, ArrowRight } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import { Card } from '../../components/ui/Card'
 
 export default function PatientDashboard() {
   const { user } = useAuth()
@@ -26,59 +29,59 @@ export default function PatientDashboard() {
   }, [user])
 
   const cards = [
-    { title: 'Book Appointment', desc: 'Schedule a visit with a doctor', to: '/patient/book', color: '#0b7065' },
-    { title: 'My Appointments', desc: 'View and track appointment status', to: '/patient/appointments', color: '#1e3a5f' },
-    { title: 'Give Feedback', desc: 'Rate your doctor experience', to: '/patient/feedback', color: '#6b21a8' },
-    { title: 'Update Profile', desc: 'Edit your personal information', to: '/patient/profile', color: '#dc2626' },
+    { title: 'Book Appointment', desc: 'Schedule a visit with a doctor', to: '/patient/book', icon: CalendarPlus },
+    { title: 'My Appointments', desc: 'View and track appointment status', to: '/patient/appointments', icon: CalendarClock },
+    { title: 'Give Feedback', desc: 'Rate your doctor experience', to: '/patient/feedback', icon: MessageSquareHeart },
+    { title: 'Update Profile', desc: 'Edit your personal information', to: '/patient/profile', icon: UserCircle },
   ]
 
   const statItems = [
-    { label: 'Upcoming', value: stats.upcoming, color: '#1e3a5f' },
-    { label: 'Awaiting Approval', value: stats.pending, color: '#d97706' },
-    { label: 'Completed', value: stats.completed, color: '#0b7065' },
+    { label: 'Upcoming', value: stats.upcoming, icon: Clock },
+    { label: 'Awaiting Approval', value: stats.pending, icon: Hourglass },
+    { label: 'Completed', value: stats.completed, icon: CheckCircle2 },
   ]
 
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <h1 style={s.h1}>Welcome, {user?.userName}</h1>
-        <p style={s.sub}>Patient Portal</p>
-      </div>
-      <div style={s.statsRow}>
-        {statItems.map(item => (
-          <div key={item.label} style={{ ...s.statBadge, borderLeft: `3px solid ${item.color}` }}>
-            <span style={s.statNum}>{item.value}</span>
-            <span style={s.statLabel}>{item.label}</span>
-          </div>
+    <div className="max-w-5xl mx-auto px-5 py-8">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-7">
+        <h1 className="text-2xl font-extrabold text-text">Welcome, {user?.userName} 👋</h1>
+        <p className="text-muted text-sm mt-1">Here's what's happening with your health journey.</p>
+      </motion.div>
+
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {statItems.map((s, i) => (
+          <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+            <Card className="p-5 flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <s.icon className="w-5 h-5 text-primary" />
+              </span>
+              <div>
+                <div className="text-xl font-extrabold text-text leading-none">{s.value}</div>
+                <div className="text-[11.5px] text-muted mt-0.5">{s.label}</div>
+              </div>
+            </Card>
+          </motion.div>
         ))}
       </div>
-      <div style={s.grid}>
-        {cards.map(c => (
-          <Link to={c.to} key={c.to} style={{ ...s.card, borderTopColor: c.color }}>
-            <div style={{ ...s.cardIcon, background: c.color + '15', color: c.color }}>
-              {c.title[0]}
-            </div>
-            <div style={s.cardTitle}>{c.title}</div>
-            <div style={s.cardDesc}>{c.desc}</div>
-          </Link>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        {cards.map((c, i) => (
+          <motion.div key={c.to} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.06 }}>
+            <Link to={c.to} className="block group">
+              <Card gradient hover className="p-6">
+                <div className="flex items-start justify-between">
+                  <span className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4">
+                    <c.icon className="w-5.5 h-5.5 text-primary" />
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-muted opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                </div>
+                <div className="font-bold text-[15px] text-text mb-1">{c.title}</div>
+                <div className="text-muted text-[13.5px]">{c.desc}</div>
+              </Card>
+            </Link>
+          </motion.div>
         ))}
       </div>
     </div>
   )
-}
-
-const s = {
-  page: { maxWidth: '900px', margin: '0 auto', padding: '40px 24px' },
-  header: { marginBottom: '24px' },
-  h1: { margin: 0, fontSize: '26px', fontWeight: 600 },
-  sub: { margin: '4px 0 0', color: '#637082', fontSize: '14px' },
-  statsRow: { display: 'flex', flexDirection: 'row', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' },
-  statBadge: { display: 'flex', alignItems: 'center', gap: '10px', background: 'white', border: '1px solid #d8e2ec', borderRadius: '6px', padding: '12px 18px' },
-  statNum: { fontSize: '24px', fontWeight: 700, lineHeight: 1 },
-  statLabel: { fontSize: '12px', color: '#637082' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' },
-  card: { background: '#fff', border: '1px solid #d8e2ec', borderTop: '3px solid', borderRadius: '6px', padding: '24px', display: 'block', transition: 'box-shadow 0.15s' },
-  cardIcon: { width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px', marginBottom: '14px' },
-  cardTitle: { fontWeight: 600, fontSize: '15px', marginBottom: '6px' },
-  cardDesc: { color: '#637082', fontSize: '13.5px' },
 }

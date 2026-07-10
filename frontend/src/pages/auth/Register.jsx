@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { HeartPulse, User, Lock, Mail, Phone, Cake, MapPin, Droplet, ArrowRight } from 'lucide-react'
 import api from '../../api/axios'
+import { Button } from '../../components/ui/Button'
+import { Input, Select, Label } from '../../components/ui/Input'
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -28,75 +32,89 @@ export default function Register() {
   }
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <h2 style={s.title}>Create account</h2>
-        <p style={s.sub}>Patient registration</p>
-        {error && <div style={s.error}>{error}</div>}
-        <form onSubmit={handleSubmit} style={s.form}>
-          <div style={s.grid2}>
-            <Field label="Username" value={form.userName} onChange={set('userName')} placeholder="Choose a username" />
-            <Field label="Password" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-background px-4 py-10">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-card p-8 sm:p-10"
+      >
+        <div className="flex items-center gap-2 mb-6">
+          <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <HeartPulse className="w-5 h-5 text-white" />
+          </span>
+          <span className="font-extrabold text-xl text-text tracking-tight">MediBook</span>
+        </div>
+
+        <h2 className="text-2xl font-extrabold text-text mb-1">Create your account</h2>
+        <p className="text-muted text-sm mb-7">Join MediBook as a patient — it only takes a minute</p>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 text-danger text-sm px-4 py-3 rounded-xl mb-5 border border-red-100"
+          >
+            {String(error)}
+          </motion.div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field icon={User} label="Username" value={form.userName} onChange={set('userName')} placeholder="Choose a username" />
+            <Field icon={Lock} label="Password" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
           </div>
-          <div style={s.grid2}>
-            <Field label="Full Name" value={form.patientName} onChange={set('patientName')} placeholder="Your full name" />
-            <Field label="Email" type="email" value={form.email} onChange={set('email')} placeholder="you@email.com" />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field icon={User} label="Full Name" value={form.patientName} onChange={set('patientName')} placeholder="Your full name" />
+            <Field icon={Mail} label="Email" type="email" value={form.email} onChange={set('email')} placeholder="you@email.com" />
           </div>
-          <div style={s.grid2}>
-            <Field label="Mobile No." value={form.mobileNo} onChange={set('mobileNo')} placeholder="+91 XXXXX XXXXX" />
-            <Field label="Age" type="number" value={form.age} onChange={set('age')} placeholder="Age" />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field icon={Phone} label="Mobile No." value={form.mobileNo} onChange={set('mobileNo')} placeholder="+91 XXXXX XXXXX" />
+            <Field icon={Cake} label="Age" type="number" value={form.age} onChange={set('age')} placeholder="Age" />
           </div>
-          <div style={s.grid3}>
+          <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label style={s.label}>Gender</label>
-              <select style={s.input} value={form.gender} onChange={set('gender')} required>
+              <Label>Gender</Label>
+              <Select value={form.gender} onChange={set('gender')} required>
                 <option value="">Select</option>
                 <option>Male</option>
                 <option>Female</option>
                 <option>Other</option>
-              </select>
+              </Select>
             </div>
             <div>
-              <label style={s.label}>Blood Group</label>
-              <select style={s.input} value={form.bloodGroup} onChange={set('bloodGroup')}>
+              <Label>Blood Group</Label>
+              <Select icon={Droplet} value={form.bloodGroup} onChange={set('bloodGroup')}>
                 <option value="">Select</option>
-                {['A+','A-','B+','B-','O+','O-','AB+','AB-'].map(g => <option key={g}>{g}</option>)}
-              </select>
+                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(g => <option key={g}>{g}</option>)}
+              </Select>
             </div>
-            <Field label="Address" value={form.address} onChange={set('address')} placeholder="City, State" />
+            <Field icon={MapPin} label="Address" value={form.address} onChange={set('address')} placeholder="City, State" />
           </div>
-          <button style={s.btn} type="submit" disabled={loading}>
-            {loading ? 'Registering…' : 'Create Account'}
-          </button>
+
+          <Button type="submit" disabled={loading} size="lg" className="w-full mt-2 group">
+            {loading ? 'Creating account…' : (
+              <>
+                Create Account
+                <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </>
+            )}
+          </Button>
         </form>
-        <p style={s.foot}>Already registered? <Link to="/login" style={s.link}>Sign in</Link></p>
-      </div>
+
+        <p className="text-center text-sm text-muted mt-7">
+          Already registered? <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
+        </p>
+      </motion.div>
     </div>
   )
 }
 
-function Field({ label, value, onChange, type = 'text', placeholder }) {
+function Field({ icon, label, value, onChange, type = 'text', placeholder }) {
   return (
     <div>
-      <label style={s.label}>{label}</label>
-      <input style={s.input} type={type} value={value}
-        onChange={onChange} placeholder={placeholder} required />
+      <Label>{label}</Label>
+      <Input icon={icon} type={type} value={value} onChange={onChange} placeholder={placeholder} required />
     </div>
   )
-}
-
-const s = {
-  page: { minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f7f9', padding: '32px 16px' },
-  card: { background: '#fff', border: '1px solid #d8e2ec', borderRadius: '8px', padding: '40px', width: '100%', maxWidth: '640px' },
-  title: { margin: '0 0 4px', fontSize: '22px', fontWeight: 600 },
-  sub: { margin: '0 0 24px', color: '#637082', fontSize: '14px' },
-  error: { background: '#fee2e2', color: '#991b1b', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '13.5px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
-  grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' },
-  label: { display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '5px' },
-  input: { width: '100%', padding: '9px 12px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '14px' },
-  btn: { marginTop: '8px', padding: '10px', background: '#0b7065', color: 'white', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' },
-  foot: { textAlign: 'center', marginTop: '20px', fontSize: '13.5px', color: '#637082' },
-  link: { color: '#0b7065', fontWeight: 500 },
 }

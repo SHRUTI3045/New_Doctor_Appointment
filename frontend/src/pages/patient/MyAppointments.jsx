@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, CalendarClock, Hash, FileText, Video, RotateCcw, XCircle, CalendarDays, Check } from 'lucide-react'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
-
-const STATUS_STYLE = {
-  PENDING:   { background: '#fef3c7', color: '#92400e' },
-  APPROVED:  { background: '#d1fae5', color: '#065f46' },
-  REJECTED:  { background: '#fee2e2', color: '#991b1b' },
-  CANCELLED: { background: '#f3f4f6', color: '#6b7280' },
-  COMPLETED: { background: '#dcfce7', color: '#166534' },
-}
+import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
+import { Input } from '../../components/ui/Input'
+import { Avatar } from '../../components/ui/Avatar'
+import { StatusBadge } from '../../components/ui/Badge'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { CardSkeleton } from '../../components/ui/Skeleton'
 
 export default function MyAppointments() {
   const [appointments, setAppointments] = useState([])
@@ -45,83 +46,111 @@ export default function MyAppointments() {
   }
 
   return (
-    <div style={s.page}>
-      <button style={s.backBtn} onClick={() => navigate('/patient')}>← Dashboard</button>
-      <h2 style={s.title}>My Appointments</h2>
-      {msg && <div style={s.info}>{msg}</div>}
-      {loading ? <p>Loading…</p> : appointments.length === 0 ? (
-        <div style={s.empty}>No appointments yet. <a href="/patient/book" style={s.link}>Book one now.</a></div>
+    <div className="max-w-3xl mx-auto px-5 py-8">
+      <button onClick={() => navigate('/patient')} className="flex items-center gap-1.5 text-sm text-muted hover:text-text mb-4 transition-colors">
+        <ArrowLeft className="w-4 h-4" /> Dashboard
+      </button>
+      <div className="flex items-center gap-2 mb-6">
+        <CalendarClock className="w-6 h-6 text-primary" />
+        <h1 className="text-2xl font-extrabold text-text">My Appointments</h1>
+      </div>
+
+      <AnimatePresence>
+        {msg && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-2 text-sm px-4 py-3 rounded-xl mb-5 border bg-amber-50 text-amber-700 border-amber-100"
+          >
+            {msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {loading ? (
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
+      ) : appointments.length === 0 ? (
+        <EmptyState
+          icon={CalendarClock}
+          title="No appointments yet"
+          description="Book your first appointment with a doctor to get started."
+          action={<Link to="/patient/book"><Button>Book an Appointment</Button></Link>}
+        />
       ) : (
-        <div style={s.list}>
-          {appointments.map(a => (
-            <div key={a.appointmentId} style={s.card}>
-              <div style={s.cardTop}>
-                <div>
-                  <div style={s.docName}>Dr. {a.doctor?.doctorName}</div>
-                  <div style={s.docSpec}>{a.doctor?.speciality} · {a.doctor?.hospitalName}</div>
-                </div>
-                <span style={{ ...s.badge, ...STATUS_STYLE[a.appointmentStatus] }}>
-                  {a.appointmentStatus}
-                </span>
-              </div>
-              <div style={s.cardMeta}>
-                <span>Date: <strong>{a.appointmentDate}</strong></span>
-                {a.remark && <span style={s.remark}>Remark: {a.remark}</span>}
-              </div>
-              {a.prescription && (
-                <div style={s.prescription}>
-                  <strong>Prescription:</strong> {a.prescription}
-                </div>
-              )}
-              {['PENDING', 'APPROVED'].includes(a.appointmentStatus) && (
-                <div style={s.actions}>
-                  {rescheduleId === a.appointmentId ? (
-                    <div style={s.rescheduleForm}>
-                      <input type="date" style={s.dateInput} value={rescheduleDate}
-                        min={new Date().toISOString().split('T')[0]}
-                        onChange={e => setRescheduleDate(e.target.value)} />
-                      <button style={s.confirmBtn} onClick={() => doReschedule(a.appointmentId)}>Confirm</button>
-                      <button style={s.cancelFormBtn} onClick={() => setRescheduleId(null)}>Cancel</button>
+        <div className="relative flex flex-col gap-5">
+          {appointments.map((a, i) => (
+            <motion.div
+              key={a.appointmentId}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.05 }}
+              className="relative pl-6"
+            >
+              <span className="absolute left-0 top-1.5 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/15" />
+              {i !== appointments.length - 1 && <span className="absolute left-[4.5px] top-4 w-px h-full bg-border" />}
+
+              <Card gradient hover className="p-5">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={a.doctor?.doctorName || '?'} size="md" />
+                    <div>
+                      <div className="font-bold text-[14.5px] text-text">Dr. {a.doctor?.doctorName}</div>
+                      <div className="text-xs text-muted">{a.doctor?.speciality} · {a.doctor?.hospitalName}</div>
                     </div>
-                  ) : (
-                    <>
-                      <button style={s.rescheduleBtn} onClick={() => { setRescheduleId(a.appointmentId); setRescheduleDate(a.appointmentDate) }}>
-                        Reschedule
-                      </button>
-                      <button style={s.cancelBtn} onClick={() => cancel(a.appointmentId)}>Cancel</button>
-                    </>
-                  )}
+                  </div>
+                  <StatusBadge status={a.appointmentStatus} />
                 </div>
-              )}
-            </div>
+
+                <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted mb-1 pl-[60px]">
+                  <span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> {a.appointmentDate}</span>
+                  <span className="flex items-center gap-1.5"><Hash className="w-3.5 h-3.5" /> {a.appointmentId}</span>
+                  {a.remark && <span className="text-danger">Remark: {a.remark}</span>}
+                </div>
+
+                {a.prescription && (
+                  <div className="mt-3 ml-[60px] flex items-start gap-2 bg-emerald-50 border-l-3 border-primary rounded-lg px-3.5 py-2.5 text-[13px] text-text">
+                    <FileText className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <span><strong className="font-semibold">Prescription:</strong> {a.prescription}</span>
+                  </div>
+                )}
+
+                <div className="ml-[60px] mt-3 flex items-center gap-2 text-muted">
+                  <Video className="w-3.5 h-3.5" />
+                  <span className="text-[12px] italic">Video call available for upcoming visits</span>
+                </div>
+
+                {['PENDING', 'APPROVED'].includes(a.appointmentStatus) && (
+                  <div className="ml-[60px] mt-4 flex flex-wrap items-center gap-2">
+                    {rescheduleId === a.appointmentId ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Input
+                          type="date"
+                          className="w-auto"
+                          value={rescheduleDate}
+                          min={new Date().toISOString().split('T')[0]}
+                          onChange={e => setRescheduleDate(e.target.value)}
+                        />
+                        <Button size="sm" onClick={() => doReschedule(a.appointmentId)}><Check className="w-3.5 h-3.5" /> Confirm</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setRescheduleId(null)}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="secondary" onClick={() => { setRescheduleId(a.appointmentId); setRescheduleDate(a.appointmentDate) }}>
+                          <RotateCcw className="w-3.5 h-3.5" /> Reschedule
+                        </Button>
+                        <Button size="sm" variant="danger" onClick={() => cancel(a.appointmentId)}>
+                          <XCircle className="w-3.5 h-3.5" /> Cancel
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}
     </div>
   )
-}
-
-const s = {
-  page: { maxWidth: '760px', margin: '0 auto', padding: '40px 24px' },
-  backBtn: { background: 'none', border: 'none', color: '#637082', cursor: 'pointer', fontSize: '13px', padding: '0 0 12px 0', display: 'block' },
-  title: { margin: '0 0 24px', fontSize: '22px', fontWeight: 600 },
-  info: { background: '#fef3c7', color: '#92400e', padding: '10px 14px', borderRadius: '4px', marginBottom: '16px', fontSize: '13.5px' },
-  empty: { color: '#637082', padding: '32px 0' },
-  link: { color: '#0b7065' },
-  list: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  card: { background: '#fff', border: '1px solid #d8e2ec', borderRadius: '6px', padding: '18px 20px' },
-  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' },
-  docName: { fontWeight: 600, fontSize: '15px' },
-  docSpec: { color: '#637082', fontSize: '13px', marginTop: '2px' },
-  badge: { fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
-  cardMeta: { display: 'flex', gap: '20px', fontSize: '13.5px', color: '#374151', marginBottom: '8px' },
-  remark: { color: '#991b1b' },
-  prescription: { marginTop: '8px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '4px', fontSize: '13.5px', color: '#374151', borderLeft: '3px solid #0b7065' },
-  actions: { marginTop: '10px', display: 'flex', gap: '8px', alignItems: 'center' },
-  rescheduleForm: { display: 'flex', gap: '8px', alignItems: 'center' },
-  dateInput: { padding: '6px 10px', border: '1px solid #d8e2ec', borderRadius: '4px', fontSize: '13px' },
-  confirmBtn: { background: '#0b7065', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  cancelFormBtn: { background: '#f3f4f6', color: '#374151', border: 'none', padding: '6px 12px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer' },
-  rescheduleBtn: { background: '#eff6ff', color: '#1d4ed8', border: 'none', padding: '5px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
-  cancelBtn: { background: '#fee2e2', color: '#991b1b', border: 'none', padding: '5px 12px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' },
 }
