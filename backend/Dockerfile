@@ -3,6 +3,7 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn -B dependency:go-offline
 COPY src ./src
+RUN cp src/main/resources/application.properties.example src/main/resources/application.properties
 RUN mvn -B clean package -DskipTests
 
 FROM eclipse-temurin:17-jre

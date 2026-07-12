@@ -1,0 +1,24 @@
+spring.application.name=doctor-appointment
+
+# MySQL — copy this file to application.properties and fill in your values.
+# In production, set these as real environment variables instead of editing the file.
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/doctor_appointment_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:YOUR_MYSQL_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:YOUR_MYSQL_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA / Hibernate
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# JWT
+app.jwt.secret=${APP_JWT_SECRET:YOUR_JWT_SECRET_KEY_MIN_32_CHARS}
+app.jwt.expiration-ms=86400000
+
+# CORS — set to your deployed frontend URL(s) in production
+app.cors.allowed-origins=${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+# Railway/Render/Heroku-style hosts inject PORT; falls back to 8080 locally
+server.port=${PORT:8080}
