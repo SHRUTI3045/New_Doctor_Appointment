@@ -6,7 +6,7 @@ import com.healthcare.appointment.service.INotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -26,7 +26,7 @@ public class NotificationServiceImpl implements INotificationService {
         notification.setType(type);
         notification.setAppointmentId(appointmentId);
         notification.setRead(false);
-        notification.setCreatedAt(LocalDateTime.now());
+        notification.setCreatedAt(Instant.now());
         return notificationRepository.save(notification);
     }
 
